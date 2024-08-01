@@ -7,4 +7,4 @@ Navigate to the target directory and execute:
 
 ...or build from solution.
 
-# RUN AS ADMINISTRATOR
+# Run it as administrator. #
