@@ -1,20 +1,14 @@
-#include <atomic>
-#include <condition_variable>
-#include <iostream>
-#include <mutex>
-#include <queue>
-#include <string>
-#include <thread>
-#include <vector>
-#include <Windows.h>
+#include "../mgr/mgr.h"
 
-std::mutex cout_mutex;
-std::mutex queue_mutex;
-std::condition_variable cv;
-std::atomic<bool> done(false);
-std::queue<std::string> file_queue;
-std::queue<std::string> dir_queue;
-
+namespace globals
+{
+	std::mutex cout_mutex;
+	std::mutex queue_mutex;
+	std::condition_variable cv;
+	std::atomic<bool> done(false);
+	std::queue<std::string> file_queue;
+	std::queue<std::string> dir_queue;
+}
 
 BOOL IsProcessElevated()
 {
@@ -43,6 +37,8 @@ Cleanup:
 
 void WorkerThread() noexcept
 {
+	using namespace globals;
+
 	while (true)
 	{
 		std::string path;
@@ -107,6 +103,8 @@ void WorkerThread() noexcept
 
 void DeleteAllFiles(const std::string& strPath) noexcept
 {
+	using namespace globals;
+
 	WIN32_FIND_DATA wfd;
 	std::string strSpec = strPath + "\\*.*";
 	HANDLE hFile = FindFirstFile(strSpec.c_str(), &wfd);
