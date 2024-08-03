@@ -8,6 +8,7 @@
 
 ImGuiStream imguiStream;
 bool autoScroll = false;
+bool pruneCompleted = false;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
 	HWND window,
@@ -22,14 +23,14 @@ long __stdcall WindowProcess(
 	WPARAM wideParameter,
 	LPARAM longParameter)
 {
-	if(ImGui_ImplWin32_WndProcHandler(window, message, wideParameter, longParameter))
+	if (ImGui_ImplWin32_WndProcHandler(window, message, wideParameter, longParameter))
 		return true;
 
-	switch(message)
+	switch (message)
 	{
 	case WM_SIZE:
 		{
-			if(gui::device && wideParameter != SIZE_MINIMIZED)
+			if (gui::device && wideParameter != SIZE_MINIMIZED)
 			{
 				gui::presentParameters.BackBufferWidth = LOWORD(longParameter);
 				gui::presentParameters.BackBufferHeight = HIWORD(longParameter);
@@ -39,9 +40,9 @@ long __stdcall WindowProcess(
 
 	case WM_SYSCOMMAND:
 		{
-			if((wideParameter & 0xfff0) == SC_KEYMENU) // disable alt app menu
+			if ((wideParameter & 0xfff0) == SC_KEYMENU) // disable alt app menu
 				return 0;
-		}	break;
+		} break;
 
 	case WM_DESTROY:
 		{
@@ -55,30 +56,31 @@ long __stdcall WindowProcess(
 
 	case WM_MOUSEMOVE:
 		{
-			if(wideParameter == MK_LBUTTON)
+			if (wideParameter == MK_LBUTTON)
 			{
 				const auto points = MAKEPOINTS(longParameter);
-				auto rect = ::RECT{ };
+				auto rect = RECT{};
 
 				GetWindowRect(gui::window, &rect);
 
 				rect.left += points.x - gui::position.x;
 				rect.top += points.y - gui::position.y;
 
-				if(gui::position.x >= 0 &&
-				   gui::position.x <= gui::WIDTH &&
-				   gui::position.y >= 0 && gui::position.y <= 19)
+				if (gui::position.x >= 0 &&
+					gui::position.x <= gui::WIDTH &&
+					gui::position.y >= 0 && gui::position.y <= 19)
 					SetWindowPos(
 						gui::window,
 						HWND_TOPMOST,
 						rect.left,
 						rect.top,
-						0,0,
+						0, 0,
 						SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOZORDER
 					);
 			}
 		} return 0;
 	}
+
 
 	return DefWindowProcW(window, message, wideParameter, longParameter);
 }
@@ -92,13 +94,13 @@ void gui::CreateHWindow(
 	windowClass.lpfnWndProc = WindowProcess;
 	windowClass.cbClsExtra = 0;
 	windowClass.cbWndExtra = 0;
-	windowClass.hInstance =	GetModuleHandleA(0);
-	windowClass.hIcon =	0;
-	windowClass.hCursor = 0;
-	windowClass.hbrBackground = 0;
-	windowClass.lpszMenuName = 0;
+	windowClass.hInstance = GetModuleHandleA(nullptr);
+	windowClass.hIcon = nullptr;
+	windowClass.hCursor = nullptr;
+	windowClass.hbrBackground = nullptr;
+	windowClass.lpszMenuName = nullptr;
 	windowClass.lpszClassName = className;
-	windowClass.hIconSm = 0;
+	windowClass.hIconSm = nullptr;
 
 	RegisterClassExA(&windowClass);
 
@@ -110,10 +112,10 @@ void gui::CreateHWindow(
 		100,
 		WIDTH,
 		HEIGHT,
-		0,
-		0,
+		nullptr,
+		nullptr,
 		windowClass.hInstance,
-		0
+		nullptr
 	);
 
 	ShowWindow(window, SW_SHOWDEFAULT);
@@ -130,7 +132,7 @@ bool gui::CreateDevice() noexcept
 {
 	d3d = Direct3DCreate9(D3D_SDK_VERSION);
 
-	if(!d3d)
+	if (!d3d)
 		return false;
 
 	ZeroMemory(&presentParameters, sizeof(presentParameters));
@@ -141,7 +143,7 @@ bool gui::CreateDevice() noexcept
 	presentParameters.AutoDepthStencilFormat = D3DFMT_D16;
 	presentParameters.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
 
-	if(d3d->CreateDevice(
+	if (d3d->CreateDevice(
 		D3DADAPTER_DEFAULT,
 		D3DDEVTYPE_HAL,
 		window,
@@ -160,7 +162,7 @@ void gui::ResetDevice() noexcept
 
 	const auto result = device->Reset(&presentParameters);
 
-	if(result == D3DERR_INVALIDCALL)
+	if (result == D3DERR_INVALIDCALL)
 		IM_ASSERT(0);
 
 	ImGui_ImplDX9_CreateDeviceObjects();
@@ -168,13 +170,13 @@ void gui::ResetDevice() noexcept
 
 void gui::DestroyDevice() noexcept
 {
-	if(device)
+	if (device)
 	{
 		device->Release();
 		device = nullptr;
 	}
 
-	if(d3d)
+	if (d3d)
 	{
 		d3d->Release();
 		d3d = nullptr;
@@ -186,7 +188,7 @@ void gui::CreateImGui() noexcept
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
-	io.IniFilename = NULL;
+	io.IniFilename = nullptr;
 	ImGui::StyleColorsDark();
 	ImGui_ImplWin32_Init(window);
 	ImGui_ImplDX9_Init(device);
@@ -205,7 +207,7 @@ void gui::BeginRender() noexcept
 {
 	MSG message;
 
-	while(PeekMessage(&message, 0, 0, 0, PM_REMOVE))
+	while (PeekMessage(&message, nullptr, 0, 0, PM_REMOVE))
 	{
 		TranslateMessage(&message);
 		DispatchMessage(&message);
@@ -224,25 +226,24 @@ void gui::EndRender() noexcept
 	device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 	device->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
 
-	device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_RGBA(0,0,0,255), 1.0f, 0);
+	device->Clear(0, nullptr, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_RGBA(0, 0, 0, 255), 1.0f, 0);
 
-	if(device->BeginScene() >= 0)
+	if (device->BeginScene() >= 0)
 	{
 		ImGui::Render();
 		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 		device->EndScene();
 	}
 
-	const auto result = device->Present(0,0,0,0);
+	const auto result = device->Present(nullptr, nullptr, nullptr, nullptr);
 
-	if(result == D3DERR_DEVICELOST && device->TestCooperativeLevel() == D3DERR_DEVICENOTRESET)
+	if (result == D3DERR_DEVICELOST && device->TestCooperativeLevel() == D3DERR_DEVICENOTRESET)
 		ResetDevice();
 }
 
 void gui::Render() noexcept
 {
-	static bool toggle = false;
-	ImGui::SetNextWindowPos({0,0,});
+	ImGui::SetNextWindowPos({0, 0,});
 	ImGui::SetNextWindowSize({WIDTH, HEIGHT});
 	ImGui::Begin(
 		"veil technologies",
@@ -253,9 +254,6 @@ void gui::Render() noexcept
 		ImGuiWindowFlags_NoMove
 	);
 
-	ImVec2 window_pos{ImGui::GetWindowPos()};
-	ImVec2 window_size{ImGui::GetWindowSize()};
-	ImVec2 cursor_pos{ImGui::GetCursorPos()};
 
 	//if(ImGui::BeginTabBar("tabs"))
 	//{
@@ -293,42 +291,52 @@ void gui::Render() noexcept
 
 	ImGui::Spacing();
 
-	if(ImGui::Button("start cleanmgr"))
+	if (ImGui::Button("start cleanmgr"))
 	{
 		system("echo off");
 		system("cleanmgr /D C");
 	}
-	if(ImGui::IsItemHovered())
+	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("starts windows cleanmgr service.");
 
 	ImGui::SameLine();
 
-	if(ImGui::Button("stop windows update service"))
+	if (ImGui::Button("stop windows update service"))
 		system("net stop wuauserv");
-	if(ImGui::IsItemHovered())
+	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("stops windows update service & current update process.");
 
 	ImGui::SameLine();
 
-	if(ImGui::Button("start dfrgui"))
+	if (ImGui::Button("start dfrgui"))
 		system("dfrgui");
-	if(ImGui::IsItemHovered())
+	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("starts defragmentation gui.");
 
 	ImGui::SameLine();
 
-	if(ImGui::Button("restore disk image"))
+	if (ImGui::Button("restore disk image"))
 		system("dism /online /cleanup-image /restorehealth");
-	if(ImGui::IsItemHovered())
+	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("starts the windows disk image repair tool");
 
 	ImGui::SeparatorText("pruning - deletes unnecessary update files and temporary folders.");
 	ImGui::SeparatorEx(0);
 
-	if(ImGui::Button("start prune"))
+	if (ImGui::Button("start prune"))
+	{
 		core::Initiate();
-	if(ImGui::IsItemHovered())
+		pruneCompleted = true;
+	}
+		
+	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("deletes unnecessary update files and temporary folders.");
+
+	if(pruneCompleted)
+	{
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(0,1,0,1), "																 completed");
+	}
 
 	ImGui::Spacing();
 	ImGui::SeparatorText("logs");
@@ -338,11 +346,11 @@ void gui::Render() noexcept
 
 	// removes gap in ListBox
 	if (lines.size() > 4)
-        lines.erase(lines.begin(), lines.begin() + 4);
+		lines.erase(lines.begin(), lines.begin() + 4);
 
-	if(ImGui::BeginListBox("##logs", ImVec2(619, 250)))
+	if (ImGui::BeginListBox("##logs", ImVec2(619, 258)))
 	{
-		for(const auto& line : lines)
+		for (const auto& line : lines)
 		{
 			ImGui::Selectable(line.c_str());
 			ImGui::SetScrollHereY(1.0f);
@@ -350,7 +358,6 @@ void gui::Render() noexcept
 
 		ImGui::EndListBox();
 	}
-
 
 	ImGui::End();
 }
