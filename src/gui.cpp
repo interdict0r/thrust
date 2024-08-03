@@ -7,6 +7,7 @@
 #include "../imgui/imgui_internal.h"
 
 ImGuiStream imguiStream;
+bool autoScroll = false;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
 	HWND window,
@@ -287,13 +288,11 @@ void gui::Render() noexcept
 	//}
 
 
-	ImGui::LabelText(" ", "disk optimization tool\nversion 1\nveil technologies - 2024");
+	ImGui::SeparatorEx(1);
+	ImGui::LabelText(" ", "disk optimization tool | version 1\nveil technologies - 2024");
 	ImGui::SeparatorEx(1);
 
-	if(ImGui::Button("stop windows update service"))
-		system("net stop wuauserv");
-	if(ImGui::IsItemHovered())
-		ImGui::SetTooltip("stops windows update service & current update process.");
+	ImGui::Spacing();
 
 	if(ImGui::Button("start cleanmgr"))
 	{
@@ -303,10 +302,26 @@ void gui::Render() noexcept
 	if(ImGui::IsItemHovered())
 		ImGui::SetTooltip("starts windows cleanmgr service.");
 
+	ImGui::SameLine();
+
+	if(ImGui::Button("stop windows update service"))
+		system("net stop wuauserv");
+	if(ImGui::IsItemHovered())
+		ImGui::SetTooltip("stops windows update service & current update process.");
+
+	ImGui::SameLine();
+
 	if(ImGui::Button("start dfrgui"))
 		system("dfrgui");
 	if(ImGui::IsItemHovered())
 		ImGui::SetTooltip("starts defragmentation gui.");
+
+	ImGui::SameLine();
+
+	if(ImGui::Button("restore disk image"))
+		system("dism /online /cleanup-image /restorehealth");
+	if(ImGui::IsItemHovered())
+		ImGui::SetTooltip("starts the windows disk image repair tool");
 
 	ImGui::SeparatorText("pruning - deletes unnecessary update files and temporary folders.");
 	ImGui::SeparatorEx(0);
@@ -317,7 +332,7 @@ void gui::Render() noexcept
 		ImGui::SetTooltip("deletes unnecessary update files and temporary folders.");
 
 	ImGui::Spacing();
-	ImGui::SeparatorText("console output");
+	ImGui::SeparatorText("logs");
 
 	std::vector<std::string> lines;
 	imguiStream.GetLines(lines);
@@ -326,15 +341,17 @@ void gui::Render() noexcept
 	if (lines.size() > 4)
         lines.erase(lines.begin(), lines.begin() + 4);
 
-	if(ImGui::BeginListBox("##console_output", ImVec2(620, 205)))
+	if(ImGui::BeginListBox("##logs", ImVec2(619, 250)))
 	{
 		for(const auto& line : lines)
+		{
 			ImGui::Selectable(line.c_str());
+			ImGui::SetScrollHereY(1.0f);
+		}
 
 		ImGui::EndListBox();
 	}
 
-	//ImGui::BeginListBox(" ", ImVec2(620, 205));
 
 	ImGui::End();
 }
