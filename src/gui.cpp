@@ -288,7 +288,6 @@ void gui::Render() noexcept
 	//}
 
 
-	ImGui::SeparatorEx(1);
 	ImGui::LabelText(" ", "disk optimization tool | version 1\nveil technologies - 2024");
 	ImGui::SeparatorEx(1);
 
