@@ -8,7 +8,9 @@
 
 ImGuiStream imguiStream;
 bool autoScroll = false;
-bool pruneCompleted = false;
+static bool pruneStarted = false;
+static bool pruneCompleted = false;
+static std::string pruneDurationText;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
 	HWND window,
@@ -325,8 +327,19 @@ void gui::Render() noexcept
 
 	if (ImGui::Button("start prune"))
 	{
+		pruneStarted = true;
+		pruneCompleted = false;
+		pruneDurationText = "";
+
+		auto start = std::chrono::high_resolution_clock::now();
 		core::Initiate();
+
+		auto end = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+		pruneDurationText = "completed in " + std::to_string(duration.count()) + " ms";
+
 		pruneCompleted = true;
+		pruneStarted = false;
 	}
 		
 	if (ImGui::IsItemHovered())
@@ -335,7 +348,7 @@ void gui::Render() noexcept
 	if(pruneCompleted)
 	{
 		ImGui::SameLine();
-		ImGui::TextColored(ImVec4(0,1,0,1), "																 completed");
+		ImGui::TextColored(ImVec4(0, 1, 0, 1), pruneDurationText.c_str());
 	}
 
 	ImGui::Spacing();
