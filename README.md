@@ -2,9 +2,7 @@
 Optimization &amp; Pruning tool for Windows 10
 
 # Usage
-Navigate to the target directory and execute:
-  g++ -std=c++17 main.cpp
+Build from solution or download the executable from the releases.
+Release | x86
 
-...or build from solution.
-
-# Run it as administrator. #
+# Run the executable as administrator. #
