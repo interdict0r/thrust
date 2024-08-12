@@ -38,23 +38,27 @@ long __stdcall WindowProcess(
 				gui::presentParameters.BackBufferHeight = HIWORD(longParameter);
 				gui::ResetDevice();
 			}
-		} return 0;
+		}
+		return 0;
 
 	case WM_SYSCOMMAND:
 		{
 			if ((wideParameter & 0xfff0) == SC_KEYMENU) // disable alt app menu
 				return 0;
-		} break;
+		}
+		break;
 
 	case WM_DESTROY:
 		{
 			PostQuitMessage(0);
-		} return 0;
+		}
+		return 0;
 
 	case WM_LBUTTONDOWN:
 		{
 			gui::position = MAKEPOINTS(longParameter);
-		} return 0;
+		}
+		return 0;
 
 	case WM_MOUSEMOVE:
 		{
@@ -80,7 +84,8 @@ long __stdcall WindowProcess(
 						SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOZORDER
 					);
 			}
-		} return 0;
+		}
+		return 0;
 	}
 
 
@@ -195,6 +200,7 @@ void gui::CreateImGui() noexcept
 	ImGui_ImplWin32_Init(window);
 	ImGui_ImplDX9_Init(device);
 
+	// set stream buffer pointer
 	std::cout.rdbuf(imguiStream.rdbuf());
 }
 
@@ -257,119 +263,192 @@ void gui::Render() noexcept
 	);
 
 
-	//if(ImGui::BeginTabBar("tabs"))
-	//{
-	//	if(ImGui::BeginTabItem("Menu"))
-	//	{
-	//		ImGui::Button("CleanMgr");
-	//		if(ImGui::IsItemHovered())
-	//			ImGui::SetTooltip("Starts Windows CleanMgr service.");
-
-	//		ImGui::Button("ChkDsk");
-	//		if(ImGui::IsItemHovered())
-	//			ImGui::SetTooltip("Starts Windows ChkDsk service.");
-
-	//		ImGui::Button("Prune");
-	//		if(ImGui::IsItemHovered())
-	//			ImGui::SetTooltip("Prunes unnecessary files.");
-
-	//		ImGui::EndTabItem();
-	//	}
-
-	//	if(ImGui::BeginTabItem("Settings"))
-	//	{
-	//		ImGui::Checkbox("Parallelization", &toggle);
-	//		if(ImGui::IsItemHovered())
-	//			ImGui::SetTooltip("Enables multithreading & parallelization for file I/O");
-	//		ImGui::EndTabItem();
-	//	}
-
-	//	ImGui::EndTabBar();
-	//}
-
-
-	ImGui::LabelText(" ", "disk optimization tool | version 1\nveil technologies - 2024");
-	ImGui::SeparatorEx(1);
-
-	ImGui::Spacing();
-
-	if (ImGui::Button("start cleanmgr"))
+	// begin tab
+	if (ImGui::BeginTabBar("tabs"))
 	{
-		system("echo off");
-		system("cleanmgr /D C");
-	}
-	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("starts windows cleanmgr service.");
-
-	ImGui::SameLine();
-
-	if (ImGui::Button("stop windows update service"))
-		system("net stop wuauserv");
-	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("stops windows update service & current update process.");
-
-	ImGui::SameLine();
-
-	if (ImGui::Button("start dfrgui"))
-		system("dfrgui");
-	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("starts defragmentation gui.");
-
-	ImGui::SameLine();
-
-	if (ImGui::Button("restore disk image"))
-		system("dism /online /cleanup-image /restorehealth");
-	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("starts the windows disk image repair tool");
-
-	ImGui::SeparatorText("pruning - deletes unnecessary update files and temporary folders.");
-	ImGui::SeparatorEx(0);
-
-	if (ImGui::Button("start prune"))
-	{
-		pruneStarted = true;
-		pruneCompleted = false;
-		pruneDurationText = "";
-
-		auto start = std::chrono::high_resolution_clock::now();
-		core::Initiate();
-
-		auto end = std::chrono::high_resolution_clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-		pruneDurationText = "completed in " + std::to_string(duration.count()) + " ms";
-
-		pruneCompleted = true;
-		pruneStarted = false;
-	}
-		
-	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("deletes unnecessary update files and temporary folders.");
-
-	if(pruneCompleted)
-	{
-		ImGui::SameLine();
-		ImGui::TextColored(ImVec4(0, 1, 0, 1), pruneDurationText.c_str());
-	}
-
-	ImGui::Spacing();
-	ImGui::SeparatorText("logs");
-
-	std::vector<std::string> lines;
-	imguiStream.GetLines(lines);
-
-	// removes gap in ListBox
-	if (lines.size() > 4)
-		lines.erase(lines.begin(), lines.begin() + 4);
-
-	if (ImGui::BeginListBox("##logs", ImVec2(619, 258)))
-	{
-		for (const auto& line : lines)
+		// main tab
+		if (ImGui::BeginTabItem("main"))
 		{
-			ImGui::Selectable(line.c_str());
-			ImGui::SetScrollHereY(1.0f);
+			ImGui::LabelText(" ", "disk optimization tool | version 1\nveil technologies - 2024");
+			ImGui::SeparatorEx(1);
+
+			ImGui::Spacing();
+
+			if (ImGui::Button("start cleanmgr"))
+			{
+				system("echo off");
+				system("cleanmgr /D C");
+			}
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("starts windows cleanmgr service.");
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("stop windows update service"))
+				system("net stop wuauserv");
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("stops windows update service & current update process.");
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("start dfrgui"))
+				system("dfrgui");
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("starts defragmentation gui.");
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("restore disk image"))
+				system("dism /online /cleanup-image /restorehealth");
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("starts the windows disk image repair tool");
+
+			ImGui::SeparatorText("pruning - deletes unnecessary update files and temporary folders.");
+			ImGui::Spacing();
+
+			if (ImGui::Button("start prune"))
+			{
+				if(globals::logPruneTime)
+				{
+					pruneStarted = true;
+					pruneCompleted = false;
+					pruneDurationText = "";
+
+					auto start = std::chrono::high_resolution_clock::now();
+					core::Initiate();
+					auto end = std::chrono::high_resolution_clock::now();
+					auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+					pruneDurationText = "completed in " + std::to_string(duration.count()) + " ms";
+					pruneCompleted = true;
+					pruneStarted = false;
+				}
+				else
+					core::Initiate();
+				//pruneStarted = true;
+				//pruneCompleted = false;
+				//pruneDurationText = "";
+
+				//auto start = std::chrono::high_resolution_clock::now();
+				//core::Initiate();
+				//auto end = std::chrono::high_resolution_clock::now();
+				//auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+				//pruneDurationText = "completed in " + std::to_string(duration.count()) + " ms";
+				//pruneCompleted = true;
+				//pruneStarted = false;
+			}
+
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("deletes unnecessary update files and temporary folders.");
+
+			if (pruneCompleted)
+			{
+				ImGui::SameLine();
+				ImGui::TextColored(ImVec4(0, 1, 0, 1), pruneDurationText.c_str());
+			}
+
+
+			ImGui::Spacing();
+			ImGui::SeparatorText("logs");
+
+			std::vector<std::string> lines;
+			imguiStream.GetLines(lines);
+
+			// quick fix for the first 4 lines being blank
+			if (lines.size() > 4)
+				lines.erase(lines.begin(), lines.begin() + 4);
+
+			if (ImGui::BeginListBox("##logs", ImVec2(719, 330)))
+			{
+				for (const auto& line : lines)
+				{
+					ImGui::Selectable(line.c_str());
+					ImGui::SetScrollHereY(1.0f);
+				}
+
+				ImGui::EndListBox();
+			}
+
+			// end of main tab
+			ImGui::EndTabItem();
 		}
 
-		ImGui::EndListBox();
+		if (ImGui::BeginTabItem("settings"))
+		{
+			static char newDir[256] = "";
+			static int selectedDirIndex = -1;
+
+			ImGui::Spacing();
+			ImGui::SeparatorText("directory settings");
+			ImGui::Spacing();
+
+			if (ImGui::BeginCombo("prune directories",
+			                      selectedDirIndex >= 0
+				                      ? globals::pruneDirectories[selectedDirIndex].c_str()
+				                      : "select directory"))
+			{
+				for (size_t i = 0; i < globals::pruneDirectories.size(); i++)
+				{
+					bool isSelected = (selectedDirIndex == i);
+					if (ImGui::Selectable(globals::pruneDirectories[i].c_str(), isSelected))
+						selectedDirIndex = i;
+					if (isSelected)
+						ImGui::SetItemDefaultFocus();
+				}
+
+				ImGui::EndCombo();
+			}
+
+			// not a good solution but does the job i guess lol
+			ImGui::Spacing();
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			ImGui::Text("add a new directory");
+			ImGui::InputText("enter directory path", newDir, IM_ARRAYSIZE(newDir));
+			if (ImGui::Button("add"))
+			{
+				if (strlen(newDir) > 0)
+				{
+					globals::pruneDirectories.push_back(std::string(newDir));
+					newDir[0] = '\0';
+				}
+			}
+
+
+			// adds remove button AFTER a directory has been selected	
+			if (selectedDirIndex >= 0)
+			{
+				ImGui::SameLine();
+				if (ImGui::Button("remove"))
+				{
+					globals::pruneDirectories.erase(globals::pruneDirectories.begin() + selectedDirIndex);
+					selectedDirIndex--;
+				}
+			}
+
+
+			ImGui::Spacing();
+			ImGui::SeparatorText("multithreading settings");
+			ImGui::Spacing();
+
+
+			ImGui::Checkbox("reserve threads", &globals::reserveThreads);
+			if(ImGui::IsItemHovered())
+				ImGui::SetTooltip("controls thread reservation to limit thread creation for file operations");
+
+			ImGui::Checkbox("log prune time", &globals::logPruneTime);
+			if(ImGui::IsItemHovered())
+				ImGui::SetTooltip("logs prune time");
+
+			// end of settings tab
+			ImGui::EndTabItem();
+		}
+
+		// end of tabs
+		ImGui::EndTabBar();
 	}
 
 	ImGui::End();
