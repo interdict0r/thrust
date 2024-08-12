@@ -1,14 +1,5 @@
 #include "core.h"
 
-namespace globals
-{
-	std::mutex cout_mutex;
-	std::mutex queue_mutex;
-	std::condition_variable cv;
-	std::atomic<bool> done(false);
-	std::queue<std::string> file_queue;
-	std::queue<std::string> dir_queue;
-}
 
 BOOL core::IsProcessElevated() noexcept
 {
@@ -114,6 +105,9 @@ void core::DeleteAllFiles(const std::string& strPath) noexcept
 		std::vector<std::thread> threads;
 		const unsigned int num_threads = std::thread::hardware_concurrency();
 
+		if(reserveThreads)
+			threads.reserve(num_threads);
+
 		for (int i = 0; i < num_threads; i++)
 			threads.emplace_back(WorkerThread);
 
@@ -143,8 +137,8 @@ void core::DeleteAllFiles(const std::string& strPath) noexcept
 			}
 		}
 		while (FindNextFile(hFile, &wfd));
-
 		FindClose(hFile);
+
 		done.store(true);
 		cv.notify_all();
 
@@ -159,6 +153,8 @@ void core::DeleteAllFiles(const std::string& strPath) noexcept
 void core::StartDeletionThreads(const std::vector<std::string>& paths) noexcept
 {
 	std::vector<std::thread> threads;
+	if(globals::reserveThreads)
+		threads.reserve(paths.size());
 
 	for (const auto& path : paths)
 		threads.emplace_back(DeleteAllFiles, path);
@@ -175,8 +171,8 @@ void core::Initiate() noexcept
 	char szPath[MAX_PATH];
 	GetTempPath(MAX_PATH, szPath);
 
-	StartDeletionThreads({
-		szPath, R"(C:\Windows\SoftwareDistribution\)", R"(C:\Windows\Temp\)",
-		R"(%USERPROFILE%\AppData\Local\Temp)"
-	});
+	std::vector<std::string> paths = {szPath};
+	paths.insert(paths.end(), globals::pruneDirectories.begin(), globals::pruneDirectories.end());
+
+	StartDeletionThreads(paths);
 }
