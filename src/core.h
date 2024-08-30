@@ -21,6 +21,7 @@ namespace core
 	void DeleteAllFiles(const std::string& strPath) noexcept;
 	void StartDeletionThreads(const std::vector<std::string>& paths) noexcept;
 	void Initiate() noexcept;
+	void ChangeIP() noexcept;
 }
 
 namespace globals
