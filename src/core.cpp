@@ -105,7 +105,7 @@ void core::DeleteAllFiles(const std::string& strPath) noexcept
 		std::vector<std::thread> threads;
 		const unsigned int num_threads = std::thread::hardware_concurrency();
 
-		if(reserveThreads)
+		if (reserveThreads)
 			threads.reserve(num_threads);
 
 		for (int i = 0; i < num_threads; i++)
@@ -153,7 +153,7 @@ void core::DeleteAllFiles(const std::string& strPath) noexcept
 void core::StartDeletionThreads(const std::vector<std::string>& paths) noexcept
 {
 	std::vector<std::thread> threads;
-	if(globals::reserveThreads)
+	if (globals::reserveThreads)
 		threads.reserve(paths.size());
 
 	for (const auto& path : paths)
@@ -175,4 +175,10 @@ void core::Initiate() noexcept
 	paths.insert(paths.end(), globals::pruneDirectories.begin(), globals::pruneDirectories.end());
 
 	StartDeletionThreads(paths);
+}
+
+void core::ChangeIP() noexcept
+{
+	system("ipconfig /release");
+	system("ipconfig /renew");
 }
