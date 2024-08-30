@@ -269,7 +269,7 @@ void gui::Render() noexcept
 		// main tab
 		if (ImGui::BeginTabItem("main"))
 		{
-			ImGui::LabelText(" ", "disk optimization tool | version 1\nveil technologies - 2024");
+			ImGui::LabelText(" ", "windows optimization tool | version 1\nveil technologies - 2024");
 			ImGui::SeparatorEx(1);
 
 			ImGui::Spacing();
@@ -314,9 +314,9 @@ void gui::Render() noexcept
 					pruneCompleted = false;
 					pruneDurationText = "";
 
-					auto start = std::chrono::high_resolution_clock::now();
+					std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::high_resolution_clock::now();
 					core::Initiate();
-					auto end = std::chrono::high_resolution_clock::now();
+					std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::high_resolution_clock::now();
 					auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
 					pruneDurationText = "completed in " + std::to_string(duration.count()) + " ms";
@@ -325,18 +325,6 @@ void gui::Render() noexcept
 				}
 				else
 					core::Initiate();
-				//pruneStarted = true;
-				//pruneCompleted = false;
-				//pruneDurationText = "";
-
-				//auto start = std::chrono::high_resolution_clock::now();
-				//core::Initiate();
-				//auto end = std::chrono::high_resolution_clock::now();
-				//auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-
-				//pruneDurationText = "completed in " + std::to_string(duration.count()) + " ms";
-				//pruneCompleted = true;
-				//pruneStarted = false;
 			}
 
 			if (ImGui::IsItemHovered())
@@ -412,7 +400,7 @@ void gui::Render() noexcept
 			{
 				if (strlen(newDir) > 0)
 				{
-					globals::pruneDirectories.push_back(std::string(newDir));
+					globals::pruneDirectories.emplace_back(std::string(newDir));
 					newDir[0] = '\0';
 				}
 			}
@@ -445,6 +433,20 @@ void gui::Render() noexcept
 
 			// end of settings tab
 			ImGui::EndTabItem();
+		}
+
+		if(ImGui::BeginTabItem("misc"))
+		{
+			ImGui::Spacing();
+			ImGui::SeparatorText("network solutions");
+			ImGui::Spacing();
+
+			if(ImGui::Button("change ip"))
+				core::ChangeIP();
+			if(ImGui::IsItemHovered())
+				ImGui::SetTooltip("changes the ip address");
+
+			ImGui::SameLine();
 		}
 
 		// end of tabs
